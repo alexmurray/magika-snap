@@ -1,6 +1,7 @@
 name: magika
 version: 1.0.1
 base: core24
+title: Magika
 summary: Fast and accurate AI powered file content types detection
 description: |
   Magika is a novel AI-powered file type detection tool that relies on the
@@ -14,6 +15,15 @@ description: |
 license: Apache-2.0
 grade: stable
 confinement: strict
+issues:
+  - https://github.com/alexmurray/magika-snap/issues
+contact:
+  - https://github.com/alexmurray/magika-snap/issues
+source-code:
+  - https://github.com/google/magika
+  - https://github.com/alexmurray/magika-snap
+website:
+  - https://securityresearch.google/magika/
 
 apps:
   magika:
