@@ -30,6 +30,4 @@ parts:
     rust-path: ["rust/cli"]
     build-packages:
       - libssl-dev
-    stage-packages:
-      - libssl3t64
 
