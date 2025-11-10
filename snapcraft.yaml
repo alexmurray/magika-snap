@@ -1,0 +1,35 @@
+name: magika
+version: 1.0.1
+base: core24
+summary: Fast and accurate AI powered file content types detection
+description: |
+  Magika is a novel AI-powered file type detection tool that relies on the
+  recent advance of deep learning to provide accurate detection. Under the hood,
+  Magika employs a custom, highly optimized model that only weighs about a few
+  MBs, and enables precise file identification within milliseconds, even when
+  running on a single CPU. Magika has been trained and evaluated on a dataset of
+  ~100M samples across 200+ content types (covering both binary and textual file
+  formats), and it achieves an average ~99% accuracy on our test set.
+
+license: Apache-2.0
+grade: stable
+confinement: strict
+
+apps:
+  magika:
+    command: bin/magika
+    plugs:
+      - home
+      - removable-media
+      - opengl
+parts:
+  magika:
+    plugin: rust
+    source: https://github.com/google/magika.git
+    source-tag: cli/v$CRAFT_PROJECT_VERSION
+    rust-path: ["rust/cli"]
+    build-packages:
+      - libssl-dev
+    stage-packages:
+      - libssl3t64
+
