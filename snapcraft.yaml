@@ -1,5 +1,5 @@
 name: magika
-version: 1.0.1
+version: 1.0.2
 base: core24
 title: Magika
 summary: Fast and accurate AI powered file content types detection
