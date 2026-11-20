@@ -1,5 +1,5 @@
 name: magika
-version: 1.0.2
+version: 2.0.0-rc.0
 base: core24
 title: Magika
 summary: Fast and accurate AI powered file content types detection
@@ -13,7 +13,7 @@ description: |
   formats), and it achieves an average ~99% accuracy on our test set.
 
 license: Apache-2.0
-grade: stable
+grade: devel
 confinement: strict
 issues:
   - https://github.com/alexmurray/magika-snap/issues
