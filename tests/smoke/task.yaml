@@ -1,0 +1,33 @@
+summary: identify file contents with the Magika CLI
+
+execute: |
+  magika --version
+
+  # The confined snap can read files in its own data directory.
+  fixtures=$(mktemp -d "$HOME/snap/magika/common/smoke.XXXXXX")
+  trap 'rm -r -- "$fixtures"' EXIT
+  html="$fixtures/example.txt"
+  archive="$fixtures/nested/archive"
+  link="$fixtures/link"
+  cat > "$html" <<'HTML'
+  <!doctype html>
+  <html lang="en">
+  <head><title>Magika smoke test</title></head>
+  <body><h1>File type detection</h1><p>This document contains HTML.</p></body>
+  </html>
+  HTML
+
+  mkdir "$fixtures/nested"
+  gzip -n -c "$html" > "$archive"
+  ln -s example.txt "$link"
+
+  magika --label --no-colors "$html" | MATCH ': html$'
+  magika --label --no-colors - < "$html" | MATCH ': html$'
+  magika --mime-type --no-colors "$html" | MATCH ': text/html$'
+  magika --label --no-colors "$link" | MATCH ': html$'
+
+  magika --recursive --no-dereference --json "$fixtures" |
+    jq -e --arg html "$html" --arg archive "$archive" --arg link "$link" '
+      map({key: .path, value: .result.value.output.label}) | from_entries |
+      . == {($html): "html", ($archive): "gzip", ($link): "symlink"}
+    '

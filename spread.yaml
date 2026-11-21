@@ -1,0 +1,87 @@
+project: magika-snap
+
+backends:
+  # image-garden downloads cloud images and boots them with QEMU/KVM.
+  garden:
+    type: adhoc
+    allocate: |
+      if [ -n "${SPREAD_HOST_PATH-}" ]; then
+        PATH="$SPREAD_HOST_PATH"
+      fi
+      exec image-garden allocate --spread "$SPREAD_SYSTEM"."$(uname -m)"
+    discard: |
+      if [ -n "${SPREAD_HOST_PATH-}" ]; then
+        PATH="$SPREAD_HOST_PATH"
+      fi
+      exec image-garden discard "$SPREAD_SYSTEM_ADDRESS"
+    systems:
+      - ubuntu-cloud-24.04:
+          username: ubuntu
+          password: ubuntu
+      - ubuntu-cloud-26.04:
+          username: ubuntu
+          password: ubuntu
+
+path: /spread/magika-snap
+
+exclude:
+  - .git
+  - .agent-shell
+  - ".spread-reuse*.yaml"
+  - "*.qcow2"
+  - "*.img"
+  - "*.iso"
+  - "*.log"
+  - "*.run"
+  - "*.user-data"
+  - "*.meta-data"
+  - "*.lock"
+
+kill-timeout: 30m
+
+environment:
+  SNAP: magika
+  CHANNEL/latest_stable: latest/stable
+  CHANNEL/latest_candidate: latest/candidate
+  CHANNEL/latest_beta: latest/beta
+  CHANNEL/latest_edge: latest/edge
+  CHANNEL/local: local
+
+suites:
+  tests/:
+    summary: Magika snap smoke tests
+    prepare: |
+      export DEBIAN_FRONTEND=noninteractive
+      apt-get update
+      apt-get install -y jq snapd
+      snap wait system seed.loaded
+
+    prepare-each: |
+      if [ "$CHANNEL" = local ]; then
+        newest_snap=
+        for candidate in "$SPREAD_PATH"/"${SNAP}"_*.snap; do
+          if [ -f "$candidate" ] && { [ -z "$newest_snap" ] || [ "$candidate" -nt "$newest_snap" ]; }; then
+            newest_snap=$candidate
+          fi
+        done
+        if [ -z "$newest_snap" ]; then
+          echo "No ${SNAP}_*.snap found in $SPREAD_PATH. Run snapcraft pack before testing the local variant." >&2
+          exit 1
+        fi
+        install_snap() { snap install --dangerous "$newest_snap"; }
+      else
+        install_snap() { snap install --channel "$CHANNEL" "$SNAP"; }
+      fi
+
+      # A local snap can also hit transient store errors when fetching its base.
+      attempts=0
+      until install_snap; do
+        attempts=$((attempts + 1))
+        if [ "$attempts" -ge 3 ]; then
+          exit 1
+        fi
+        sleep 10
+      done
+
+    restore-each: |
+      snap remove --purge "$SNAP"
